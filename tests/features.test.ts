@@ -6,14 +6,14 @@ import { registerForEvent, cancelRegistration, saveEvent, removeEvent } from '@/
 
 const seedEvents = structuredClone(events)
 const seedRegistrations = structuredClone(registrations)
-const student = users[0], organizer = users[1]
+const student = users[0], organizer = users[1], student2 = users[2], student3 = users[3]
 beforeEach(() => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-09-26T00:00:00Z'))
   events.splice(0, events.length, ...structuredClone(seedEvents))
   registrations.splice(0, registrations.length, ...structuredClone(seedRegistrations))
 })
-afterEach(() => vi.useRealTimers())
+afterEach(() => { vi.useRealTimers() })
 function fixture() {
   saveEvent(organizer, { name: 'New workshop', venue: 'Lab', date: '2026-12-01T12:00:00Z', description: '', category: 'Tech', capacity: 1 })
   return events[events.length - 1]
@@ -42,14 +42,14 @@ describe('required features', () => {
     expect(() => registerForEvent(null, e.id)).toThrow()
     expect(() => registerForEvent(organizer, e.id)).toThrow()
     expect(() => registerForEvent(student, 'missing')).toThrow()
-    e.seatsAvailable = 0
-    expect(() => registerForEvent(student, e.id)).toThrow('full')
-    e.seatsAvailable = 1
-    e.date = '2020-01-01'
-    expect(() => registerForEvent(student, e.id)).toThrow('closed')
-    e.date = '2026-12-01'
-    e.cancelled = true
-    expect(() => registerForEvent(student, e.id)).toThrow('closed')
+    registerForEvent(student, e.id) // capacity 1 is now genuinely full
+    expect(() => registerForEvent(student2, e.id)).toThrow('full')
+    const pastEvent = fixture()
+    pastEvent.date = '2020-01-01'
+    expect(() => registerForEvent(student, pastEvent.id)).toThrow('closed')
+    const cancelledEvent = fixture()
+    cancelledEvent.cancelled = true
+    expect(() => registerForEvent(student, cancelledEvent.id)).toThrow('closed')
   })
   it('enforces organizer ownership and capacity validation', () => {
     const e = fixture()
@@ -57,7 +57,11 @@ describe('required features', () => {
     saveEvent(organizer, { ...e, capacity: 2 }, e.id)
     expect(e.seatsAvailable).toBe(1)
     expect(() => saveEvent(organizer, { ...e, capacity: 0 }, e.id)).toThrow()
-    e.capacity = 4; e.seatsAvailable = 1
+    // Book 3 of 4 seats for real, then capacity cannot drop below 3.
+    saveEvent(organizer, { ...e, capacity: 4 }, e.id)
+    registerForEvent(student2, e.id)
+    registerForEvent(student3, e.id)
+    expect(e.seatsAvailable).toBe(1)
     expect(() => saveEvent(organizer, { ...e, capacity: 2 }, e.id)).toThrow('booked')
     expect(() => saveEvent(student, e, e.id)).toThrow()
     const foreign = events.find(x => x.organizerId !== organizer.id)!

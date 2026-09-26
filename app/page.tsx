@@ -1,9 +1,9 @@
 'use client'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
 import { useStore } from '@/components/useStore'
-import { events, isPastEvent } from '@/data/events'
+import { studentFacingEvents } from '@/data/store'
 import EventCard from '@/components/EventCard'
 import EmptyState from '@/components/EmptyState'
 import CampusAssistant from '@/components/CampusAssistant'
@@ -16,7 +16,7 @@ export default function HomePage() {
   useStore()
   const { currentUser } = useAuth()
   const [selectedDay, setSelectedDay] = useState('')
-  const upcoming = useMemo(() => events.filter(e => !isPastEvent(e) && !e.cancelled).sort((a,b) => +new Date(a.date)- +new Date(b.date)), [])
+  const upcoming = studentFacingEvents().sort((a,b) => +new Date(a.date)- +new Date(b.date))
   const today = new Date()
   const monday = new Date(today)
   monday.setHours(0,0,0,0)

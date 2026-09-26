@@ -17,6 +17,8 @@ export interface CampusEvent {
   seatsAvailable: number
   organizerId: string
   cancelled: boolean
+  createdAt: string // ISO 8601, when the event was posted
+  updatedAt: string // ISO 8601, last time the event details were edited
 }
 
 // "Today" for the seed data. Events before this are considered past.
@@ -35,6 +37,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 37,
     organizerId: 'org-1',
     cancelled: false,
+    createdAt: '2026-09-05T10:00:00',
+    updatedAt: '2026-09-05T10:00:00',
   },
   {
     id: 'evt-02',
@@ -48,6 +52,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 0,
     organizerId: 'org-2',
     cancelled: false,
+    createdAt: '2026-09-08T10:00:00',
+    updatedAt: '2026-09-08T10:00:00',
   },
   {
     id: 'evt-03',
@@ -61,6 +67,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 12,
     organizerId: 'org-3',
     cancelled: false,
+    createdAt: '2026-09-12T10:00:00',
+    updatedAt: '2026-09-12T10:00:00',
   },
   {
     id: 'evt-04',
@@ -74,6 +82,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 45,
     organizerId: 'org-4',
     cancelled: false,
+    createdAt: '2026-08-20T10:00:00',
+    updatedAt: '2026-08-20T10:00:00',
   },
   {
     id: 'evt-05',
@@ -87,6 +97,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 6,
     organizerId: 'org-2',
     cancelled: false,
+    createdAt: '2026-09-10T10:00:00',
+    updatedAt: '2026-09-24T15:30:00',
   },
   {
     id: 'evt-06',
@@ -100,6 +112,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 500,
     organizerId: 'org-2',
     cancelled: false,
+    createdAt: '2026-09-22T10:00:00',
+    updatedAt: '2026-09-22T10:00:00',
   },
   {
     id: 'evt-07',
@@ -113,6 +127,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 0,
     organizerId: 'org-1',
     cancelled: false,
+    createdAt: '2026-08-25T10:00:00',
+    updatedAt: '2026-08-25T10:00:00',
   },
   {
     id: 'evt-08',
@@ -126,6 +142,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 20,
     organizerId: 'org-4',
     cancelled: false,
+    createdAt: '2026-09-14T10:00:00',
+    updatedAt: '2026-09-14T10:00:00',
   },
   {
     id: 'evt-09',
@@ -139,6 +157,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 88,
     organizerId: 'org-3',
     cancelled: false,
+    createdAt: '2026-09-11T10:00:00',
+    updatedAt: '2026-09-11T10:00:00',
   },
   {
     id: 'evt-10',
@@ -152,6 +172,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 3,
     organizerId: 'org-2',
     cancelled: false,
+    createdAt: '2026-08-18T10:00:00',
+    updatedAt: '2026-08-18T10:00:00',
   },
   {
     id: 'evt-11',
@@ -165,6 +187,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 150,
     organizerId: 'org-2',
     cancelled: false,
+    createdAt: '2026-09-15T10:00:00',
+    updatedAt: '2026-09-15T10:00:00',
   },
   {
     id: 'evt-12',
@@ -178,6 +202,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 9,
     organizerId: 'org-1',
     cancelled: false,
+    createdAt: '2026-08-15T10:00:00',
+    updatedAt: '2026-08-15T10:00:00',
   },
   {
     id: 'evt-13',
@@ -191,6 +217,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 0,
     organizerId: 'org-4',
     cancelled: false,
+    createdAt: '2026-08-28T10:00:00',
+    updatedAt: '2026-08-28T10:00:00',
   },
   {
     id: 'evt-14',
@@ -204,6 +232,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 45,
     organizerId: 'org-1',
     cancelled: false,
+    createdAt: '2026-09-23T10:00:00',
+    updatedAt: '2026-09-23T10:00:00',
   },
   {
     id: 'evt-15',
@@ -217,6 +247,8 @@ export const events: CampusEvent[] = [
     seatsAvailable: 14,
     organizerId: 'org-4',
     cancelled: false,
+    createdAt: '2026-09-16T10:00:00',
+    updatedAt: '2026-09-16T10:00:00',
   },
 ]
 

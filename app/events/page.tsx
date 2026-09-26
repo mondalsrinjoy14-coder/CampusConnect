@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { events, isPastEvent, searchEventsByName, filterEventsByCategory, type EventCategory } from '@/data/events'
+import { searchEventsByName, filterEventsByCategory, type EventCategory } from '@/data/events'
+import { studentFacingEvents } from '@/data/store'
 import { useStore } from '@/components/useStore'
 import EmptyState from '@/components/EmptyState'
 import EventCard from '@/components/EventCard'
@@ -30,7 +31,7 @@ export default function EventsPage() {
     if (search) setQuery(search)
   }, [])
   const filteredEvents = filterEventsByCategory(
-    searchEventsByName(events.filter(e => !e.cancelled && !isPastEvent(e)), query), category,
+    searchEventsByName(studentFacingEvents(), query), category,
   ).sort((a, b) => sort === 'seats' ? b.seatsAvailable - a.seatsAvailable : sort === 'popular' ? (b.capacity-b.seatsAvailable)-(a.capacity-a.seatsAvailable) : new Date(a.date).getTime() - new Date(b.date).getTime())
 
   return (

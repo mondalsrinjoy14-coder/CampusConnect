@@ -30,7 +30,11 @@ This follows the starter's in-memory demo model: the existing events and registr
     npm.cmd test
     npm.cmd run build
 
-Eight tests cover the original tests plus registration, cancellation, role checks, event ownership, validation, and search/filter behavior. The starter's events.tests.ts file is now included in test discovery.
+Twenty-eight tests cover the original tests plus registration, cancellation, role checks, event ownership, validation, and search/filter behavior, along with:
+
+- **Seat integrity** (`tests/seats-registrations.test.ts`): seats are derived from confirmed registrations only, stay consistent through register/cancel/re-register, never exceed capacity under burst registrations, and are repaired automatically on startup (`repairDataIntegrity` in `data/store.ts` collapses duplicate confirmed registrations and resyncs seat caches).
+- **Visibility**: cancelled events are hidden from students and guests at the data layer (`eventsVisibleTo`/`studentFacingEvents`) while remaining visible to the owning organizer, whose dashboard has an Active / Cancelled & past tab with participant history.
+- **Campus AI** (`tests/assistant.test.ts`): `askAssistant` in `data/assistant.ts` answers from live store data (events, seats, your registrations, recent additions/updates), respects the same visibility rules as the site, and never exposes other students' data. No event facts are hard-coded.
 
 ## Replacing files in an existing copy
 

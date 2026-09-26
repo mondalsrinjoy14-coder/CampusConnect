@@ -2,8 +2,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/components/AuthProvider'
 import { useStore } from '@/components/useStore'
-import { registerForEvent } from '@/data/store'
-import { registrations } from '@/data/registrations'
+import { registerForEvent, registrationStatusFor, getEventParticipants } from '@/data/store'
 import Link from 'next/link'
 import { getEventById, isPastEvent, isFullEvent } from '@/data/events'
 import StatusBadge from '@/components/StatusBadge'
@@ -33,6 +32,7 @@ export default function EventDetailPage({
   useStore()
   const { currentUser } = useAuth()
   const [message, setMessage] = useState('')
+  const [busy, setBusy] = useState(false)
   const event = getEventById(params.id)
 
   if (!event || (event.cancelled && event.organizerId !== currentUser?.id)) {
@@ -60,8 +60,15 @@ export default function EventDetailPage({
       : full
         ? 'full'
         : 'open'
-  const registered = registrations.some(r => r.eventId === event.id && r.studentId === currentUser?.id && r.status === 'confirmed')
+  const regStatus = registrationStatusFor(currentUser, event.id)
+  const registered = regStatus === 'confirmed'
+  const isOwner = currentUser?.role === 'organizer' && event.organizerId === currentUser.id
   const canRegister = currentUser?.role === 'student' && !registered && !past && !full && !event.cancelled
+
+  let participants: ReturnType<typeof getEventParticipants> = []
+  if (isOwner) {
+    try { participants = getEventParticipants(currentUser, event.id) } catch { participants = [] }
+  }
 
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
@@ -85,6 +92,22 @@ export default function EventDetailPage({
           <span className="eyebrow-tag">{event.category}</span>
           <h1 style={{ fontSize: 32, marginTop: 12 }}>{event.name}</h1>
           <p style={{ marginTop: 16, fontSize: 15.5 }}>{event.description}</p>
+          {isOwner && (event.cancelled || past) && (
+            <div className="card-surface" style={{ marginTop: 24, padding: 20 }}>
+              <h2 style={{ fontSize: 18, marginBottom: 8 }}>Registration history</h2>
+              {participants.length === 0 ? (
+                <p>No registrations were recorded for this event.</p>
+              ) : (
+                <ul className="participant-list">
+                  {participants.map((p, i) => (
+                    <li key={i} className={p.status === 'cancelled' ? 'cancelled' : ''}>
+                      {p.name} — {p.status === 'cancelled' ? 'cancelled' : 'registered'} · {new Date(p.registeredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </div>
 
         <aside
@@ -103,17 +126,25 @@ export default function EventDetailPage({
           <Detail label="Venue" value={event.venue} />
           <Detail
             label="Seats"
-            value={`${event.seatsAvailable} of ${event.capacity} available`}
+            value={event.cancelled ? 'Registration closed' : `${event.seatsAvailable} of ${event.capacity} available`}
           />
 
           <form onSubmit={(e) => {
             e.preventDefault()
-            try { registerForEvent(currentUser, event.id); setMessage('Registration successful. View it in My Registrations.') }
-            catch (error) { setMessage((error as Error).message) }
+            if (busy) return
+            setBusy(true)
+            try {
+              registerForEvent(currentUser, event.id)
+              setMessage('Registration successful. View it in My Registrations.')
+            } catch (error) {
+              setMessage((error as Error).message)
+            } finally {
+              setBusy(false)
+            }
           }}>
             <p style={{ marginBottom: 12 }}>{currentUser ? `Account: ${currentUser.name}` : 'Choose a student account from the top menu to sign in.'}</p>
-            <button className="btn btn-primary" disabled={!canRegister} type="submit">
-              {registered ? 'Already registered' : !currentUser ? 'Sign in to register' : currentUser.role !== 'student' ? 'Students only' : full ? 'Event full' : !canRegister ? 'Registration closed' : 'Confirm registration'}
+            <button className="btn btn-primary" disabled={!canRegister || busy} type="submit">
+              {busy ? 'Reserving…' : registered ? 'Already registered' : !currentUser ? 'Sign in to register' : currentUser.role !== 'student' ? 'Students only' : event.cancelled ? 'Event cancelled' : full ? 'Event full' : past ? 'Registration closed' : regStatus === 'cancelled' ? 'Register again' : 'Confirm registration'}
             </button>
             <p role="status" style={{ marginTop: 12 }}>{message}</p>
           </form>
