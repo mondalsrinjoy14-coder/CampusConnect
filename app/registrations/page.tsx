@@ -1,115 +1,46 @@
 'use client'
-
+import { useState } from 'react'
 import Link from 'next/link'
 import { useAuth } from '@/components/AuthProvider'
+import { useStore } from '@/components/useStore'
 import { getRegistrationsForStudent } from '@/data/registrations'
-import { getEventById } from '@/data/events'
-import StatusBadge from '@/components/StatusBadge'
+import { getEventById, isPastEvent } from '@/data/events'
+import { cancelRegistration } from '@/data/store'
 import EmptyState from '@/components/EmptyState'
 
 export default function RegistrationsPage() {
+  useStore()
   const { currentUser } = useAuth()
-
-  if (currentUser.role !== 'student') {
-    return (
-      <section className="shell" style={{ padding: '56px 0' }}>
-        <EmptyState
-          title="This page is for students"
-          description="Switch to a student account from the top-right menu to see registered events."
-        />
+  const [message, setMessage] = useState('')
+  if (currentUser?.role !== 'student') return <section className="shell section-pad"><EmptyState title="Student account required" description="Choose a student account from the top menu to see your registrations." /></section>
+  const mine = getRegistrationsForStudent(currentUser.id).filter(r => {
+    const event = getEventById(r.eventId)
+    return r.status === 'confirmed' && event && !event.cancelled
+  }).sort((a, b) => new Date(getEventById(a.eventId)!.date).getTime() - new Date(getEventById(b.eventId)!.date).getTime())
+  return <section className="shell section-pad">
+    <span className="eyebrow-tag">{currentUser.name}</span>
+    <h1>My registrations</h1>
+    <p role="status">{message}</p>
+    {!mine.length && <EmptyState title="No registrations yet" description="Find an upcoming event and reserve your seat." action={<Link href="/events" className="btn btn-primary">Browse events</Link>} />}
+    {[false, true].map(past => {
+      const group = mine.filter(r => isPastEvent(getEventById(r.eventId)!) === past)
+      if (!group.length) return null
+      return <section key={String(past)} style={{ marginTop: 28 }}>
+        <h2>{past ? 'Past events' : 'Upcoming events'}</h2>
+        <ul className="stack">{group.map(reg => {
+          const event = getEventById(reg.eventId)!
+          return <li className="card-surface manage-row" key={reg.id}>
+            <div><Link href={'/events/' + event.id}><strong>{event.name}</strong></Link>
+              <p>{new Date(event.date).toLocaleString('en-IN')} · {event.venue}</p>
+              <span>{past ? 'Past · Confirmed' : 'Confirmed'}</span>
+            </div>
+            {!past && <button className="btn btn-secondary" onClick={() => {
+              try { cancelRegistration(currentUser, reg.id); setMessage('Registration cancelled. Your seat is available again.') }
+              catch(error) { setMessage((error as Error).message) }
+            }}>Cancel registration</button>}
+          </li>
+        })}</ul>
       </section>
-    )
-  }
-
-  const myRegistrations = getRegistrationsForStudent(currentUser.id)
-
-  return (
-    <section className="shell" style={{ padding: '40px 0 64px' }}>
-      <div style={{ marginBottom: 28 }}>
-        <span className="eyebrow-tag">signed up as {currentUser.name}</span>
-        <h1 style={{ fontSize: 30, marginTop: 10 }}>My registrations</h1>
-        <p style={{ marginTop: 8 }}>
-          Everything you've registered for. This starter shows seed data —
-          {/* PARTICIPANT TASK (Task 3): split into upcoming/past sections,
-              and add a working cancel button. */}{' '}
-          separating upcoming from past, and cancelling, are Task 3.
-        </p>
-      </div>
-
-      {myRegistrations.length === 0 ? (
-        <EmptyState
-          title="No registrations yet"
-          description="Once you register for an event, it'll show up here."
-          action={
-            <Link href="/events" className="btn btn-primary">
-              Browse events
-            </Link>
-          }
-        />
-      ) : (
-        <ul style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {myRegistrations.map((reg) => {
-            const event = getEventById(reg.eventId)
-            if (!event) return null
-            return (
-              <li
-                key={reg.id}
-                className="card-surface"
-                style={{
-                  padding: '18px 20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 16,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <div>
-                  <Link
-                    href={`/events/${event.id}`}
-                    style={{
-                      fontFamily: 'var(--font-display)',
-                      fontWeight: 600,
-                      fontSize: 17,
-                      textDecoration: 'none',
-                    }}
-                  >
-                    {event.name}
-                  </Link>
-                  <div
-                    style={{
-                      fontSize: 13.5,
-                      color: 'var(--ink-soft)',
-                      marginTop: 4,
-                    }}
-                  >
-                    {new Date(event.date).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}{' '}
-                    · {event.venue}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <StatusBadge
-                    status={reg.status === 'cancelled' ? 'cancelled' : 'open'}
-                  />
-                  {/* PARTICIPANT TASK (Task 3): wire this up to
-                      DELETE /api/registrations/[id] and update seats. */}
-                  <button
-                    className="btn btn-secondary"
-                    disabled
-                    title="Cancellation isn't wired up yet — that's Task 3"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-    </section>
-  )
+    })}
+  </section>
 }

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
-import { events, EventCategory } from '@/data/events'
+import { useState, useEffect } from 'react'
+import { events, isPastEvent, searchEventsByName, filterEventsByCategory, type EventCategory } from '@/data/events'
+import { useStore } from '@/components/useStore'
+import EmptyState from '@/components/EmptyState'
 import EventCard from '@/components/EventCard'
 
 const CATEGORIES: (EventCategory | 'All')[] = [
@@ -15,14 +17,21 @@ const CATEGORIES: (EventCategory | 'All')[] = [
 ]
 
 export default function EventsPage() {
-  // PARTICIPANT TASK (Task 1): these two pieces of state exist so the
-  // search box and category dropdown below are usable, but right now
-  // nothing actually reads them — the grid below always renders every
-  // event in `events`. Wire this up to `searchEventsByName` and
-  // `filterEventsByCategory` from data/events.ts, and make the two
-  // compose together.
+  useStore()
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState<EventCategory | 'All'>('All')
+
+  const [sort, setSort] = useState('date')
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const selected = params.get('category')
+    if (selected && CATEGORIES.includes(selected as EventCategory)) setCategory(selected as EventCategory)
+    const search = params.get('q')
+    if (search) setQuery(search)
+  }, [])
+  const filteredEvents = filterEventsByCategory(
+    searchEventsByName(events.filter(e => !e.cancelled && !isPastEvent(e)), query), category,
+  ).sort((a, b) => sort === 'seats' ? b.seatsAvailable - a.seatsAvailable : sort === 'popular' ? (b.capacity-b.seatsAvailable)-(a.capacity-a.seatsAvailable) : new Date(a.date).getTime() - new Date(b.date).getTime())
 
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
@@ -39,6 +48,7 @@ export default function EventsPage() {
       >
         <input
           type="search"
+          aria-label="Search events by name"
           placeholder="Search events by name…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -52,6 +62,7 @@ export default function EventsPage() {
           }}
         />
         <select
+          aria-label="Filter events by category"
           value={category}
           onChange={(e) => setCategory(e.target.value as EventCategory | 'All')}
           style={{
@@ -68,8 +79,16 @@ export default function EventsPage() {
             </option>
           ))}
         </select>
+        <select className="sort-select" aria-label="Sort events" value={sort} onChange={e=>setSort(e.target.value)}><option value="date">Soonest first</option><option value="seats">Most seats available</option><option value="popular">Most popular</option></select>
       </div>
 
+      <p role="status" style={{ marginBottom: 16 }}>
+        {filteredEvents.length === 0
+          ? 'No events found. Try a different name or category.'
+          : `${filteredEvents.length} event${filteredEvents.length === 1 ? '' : 's'} found.`}
+      </p>
+
+      {filteredEvents.length === 0 && <EmptyState title="No matching events" description="Try a different search or category." action={<button className="btn btn-secondary" onClick={() => { setQuery(''); setCategory('All') }}>Clear filters</button>} />}
       <div
         style={{
           display: 'grid',
@@ -77,7 +96,7 @@ export default function EventsPage() {
           gap: 16,
         }}
       >
-        {events.map((event) => (
+        {filteredEvents.map((event) => (
           <EventCard key={event.id} event={event} />
         ))}
       </div>

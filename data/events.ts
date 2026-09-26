@@ -220,9 +220,9 @@ export const events: CampusEvent[] = [
   },
 ]
 
-/** True when the event's date has already passed relative to TODAY. */
+/** True when the event's date has already passed relative to the current clock. */
 export function isPastEvent(event: CampusEvent): boolean {
-  return new Date(event.date).getTime() < TODAY.getTime()
+  return new Date(event.date).getTime() <= Date.now()
 }
 
 /** True when there are no seats left. */
@@ -235,34 +235,11 @@ export function getEventById(id: string): CampusEvent | undefined {
   return events.find((event) => event.id === id)
 }
 
-/**
- * PARTICIPANT TASK (Task 1 — Event Listing):
- *
- * This is a stub. Right now it ignores `query` completely and just
- * returns every event, which is why `tests/search.test.ts` is failing.
- *
- * You need to make this do a case-insensitive, partial match on
- * `event.name` — e.g. "hack" should match "Hack the Campus 2026".
- */
-export function searchEventsByName(
-  eventList: CampusEvent[],
-  query: string,
-): CampusEvent[] {
-  // TODO(participant): implement case-insensitive partial name search.
-  return eventList
+/** Case-insensitive partial event name search. */
+export function searchEventsByName(eventList: CampusEvent[], query: string): CampusEvent[] {
+  const term = query.trim().toLowerCase()
+  return eventList.filter(event => event.name.toLowerCase().includes(term))
 }
-
-/**
- * PARTICIPANT TASK (Task 1 — Event Listing):
- *
- * This is a stub. Right now it ignores `category` and returns every
- * event unchanged. You need to filter by exact category match, and
- * make sure it composes with searchEventsByName above.
- */
-export function filterEventsByCategory(
-  eventList: CampusEvent[],
-  category: EventCategory | 'All',
-): CampusEvent[] {
-  // TODO(participant): implement category filtering.
-  return eventList
+export function filterEventsByCategory(eventList: CampusEvent[], category: EventCategory | 'All'): CampusEvent[] {
+  return category === 'All' ? eventList : eventList.filter(event => event.category === category)
 }

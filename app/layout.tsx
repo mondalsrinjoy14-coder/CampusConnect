@@ -16,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body id="top">
         <AuthProvider>
           <Navbar />
           <main style={{ minHeight: '70vh' }}>{children}</main>

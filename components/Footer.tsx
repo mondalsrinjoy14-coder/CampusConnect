@@ -1,26 +1,2 @@
-export default function Footer() {
-  return (
-    <footer
-      style={{
-        borderTop: '1.5px solid var(--line)',
-        marginTop: 64,
-        padding: '24px 0',
-      }}
-    >
-      <div
-        className="shell"
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          flexWrap: 'wrap',
-          gap: 8,
-          fontSize: 13,
-          color: 'var(--ink-soft)',
-        }}
-      >
-        <span>Campus Connect </span>
-
-      </div>
-    </footer>
-  )
-}
+import Link from 'next/link'
+export default function Footer(){return <footer className="site-footer"><div className="shell footer-inner"><div><Link className="footer-brand" href="/">campusconnect ↗</Link><p>Less scrolling. More showing up.</p></div><div className="footer-links"><Link href="/events">Explore events</Link><Link href="/organizer">For organizers</Link><a href="#top">Back to top ↑</a></div></div></footer>}

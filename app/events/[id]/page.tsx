@@ -1,3 +1,9 @@
+'use client'
+import { useState } from 'react'
+import { useAuth } from '@/components/AuthProvider'
+import { useStore } from '@/components/useStore'
+import { registerForEvent } from '@/data/store'
+import { registrations } from '@/data/registrations'
 import Link from 'next/link'
 import { getEventById, isPastEvent, isFullEvent } from '@/data/events'
 import StatusBadge from '@/components/StatusBadge'
@@ -24,9 +30,12 @@ export default function EventDetailPage({
 }: {
   params: { id: string }
 }) {
+  useStore()
+  const { currentUser } = useAuth()
+  const [message, setMessage] = useState('')
   const event = getEventById(params.id)
 
-  if (!event) {
+  if (!event || (event.cancelled && event.organizerId !== currentUser?.id)) {
     return (
       <section className="shell" style={{ padding: '56px 0' }}>
         <EmptyState
@@ -51,7 +60,8 @@ export default function EventDetailPage({
       : full
         ? 'full'
         : 'open'
-  const canRegister = !past && !full && !event.cancelled
+  const registered = registrations.some(r => r.eventId === event.id && r.studentId === currentUser?.id && r.status === 'confirmed')
+  const canRegister = currentUser?.role === 'student' && !registered && !past && !full && !event.cancelled
 
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
@@ -96,23 +106,17 @@ export default function EventDetailPage({
             value={`${event.seatsAvailable} of ${event.capacity} available`}
           />
 
-          {/* PARTICIPANT TASK (Task 2 — Registration): this button is a
-              placeholder. Wire it to a registration form and the
-              POST /api/registrations route, and make sure it respects
-              login state, duplicate registrations, full events, and
-              past/cancelled events. */}
-          <button
-            className="btn btn-primary"
-            disabled={!canRegister}
-            style={{ marginTop: 4 }}
-            title="Registration isn't wired up yet — that's Task 2"
-          >
-            {canRegister
-              ? 'Register'
-              : status === 'full'
-                ? 'Event full'
-                : 'Registration closed'}
-          </button>
+          <form onSubmit={(e) => {
+            e.preventDefault()
+            try { registerForEvent(currentUser, event.id); setMessage('Registration successful. View it in My Registrations.') }
+            catch (error) { setMessage((error as Error).message) }
+          }}>
+            <p style={{ marginBottom: 12 }}>{currentUser ? `Account: ${currentUser.name}` : 'Choose a student account from the top menu to sign in.'}</p>
+            <button className="btn btn-primary" disabled={!canRegister} type="submit">
+              {registered ? 'Already registered' : !currentUser ? 'Sign in to register' : currentUser.role !== 'student' ? 'Students only' : full ? 'Event full' : !canRegister ? 'Registration closed' : 'Confirm registration'}
+            </button>
+            <p role="status" style={{ marginTop: 12 }}>{message}</p>
+          </form>
         </aside>
       </div>
     </section>
